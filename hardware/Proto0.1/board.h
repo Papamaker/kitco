@@ -164,7 +164,7 @@ void setLcdLight(unsigned char pourcent) {
 }
 
 // toute l'inistialisation dépendant du matériel
-void initBoard() {
+void initBoard(byte anim) {
 
   // le buzzer
   pinMode(BUZZER,OUTPUT);
@@ -191,7 +191,9 @@ void initBoard() {
 
   display.setContrast(50);
   display.clearDisplay();   // clears the screen and buffer
-  animDebut();
+    if (anim) {
+      animDebut();
+    }
   
 }
 

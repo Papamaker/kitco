@@ -10,7 +10,6 @@ void attendTouche() {
     litBoutons();
     while (etatBoutons==0) {
         litBoutons();
-        delay(50);
     }
 }
 
@@ -19,7 +18,6 @@ void attendRelache() {
     litBoutons();
     while (etatBoutons!=0) {
         litBoutons();
-        delay(50);
     }
 }
 

@@ -2,7 +2,7 @@
 #define _UI_H
 
 // toute l'initialisation dépendant du matériel
-void initBoard();
+void initBoard(byte anim);
 
 // Pour ajuster l'éclairage à pourcent(age) 
 void setLcdLight(unsigned char pourcent);
