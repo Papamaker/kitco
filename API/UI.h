@@ -7,6 +7,9 @@ void initBoard();
 // Pour ajuster l'éclairage à pourcent(age) 
 void setLcdLight(unsigned char pourcent);
 
+// Etat tampon des boutons (position des bits définies ci-après)
+byte etatBoutons = 0;
+
 // Lecture globale des boutons stocké en cache
 void litBoutons();
 

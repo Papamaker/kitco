@@ -1,11 +1,13 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_PCD8544.h>
+
 #include "Wire.h"
 #include "UI.h"
-
-// Etat tampon des boutons (position des bits définies ci-après)
-byte etatBoutons = 0;
+#include "utils.h"
 
 // touches
 #define TOUCHE_HAUT   1
@@ -26,6 +28,14 @@ byte etatBoutons = 0;
 #define LED_VERTE_3 32
 #define LED_ROUGE_4 16
 
+// Software SPI (slower updates, more flexible pin options):
+// pin 7 - Serial clock out (SCLK)
+// pin 6 - Serial data out (DIN)
+// pin 5 - Data/Command select (D/C)
+// pin 4 - LCD chip select (CS)
+// pin 3 - LCD reset (RST)
+Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);
+
 // Buzzer
 #define BUZZER 2
 
@@ -37,6 +47,55 @@ byte etatLEDs = 0;
 
 // intensité du rétro-éclairage
 byte retroLcd = 100;
+
+
+// séquence de démarrage pour tester LEDs et écran et buzzer
+void animDebut() {
+    
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(BLACK);
+    display.setCursor(3,display.height()/2-7);
+    display.println(" Papamaker.fr");
+    String test = String("   Pr")+EAIGU+"sente";
+    display.println(test);
+    display.display();
+
+    setLEDBleue1(HIGH);
+    tone(BUZZER,1000,500);
+    delay(500);
+    setLEDBleue1(LOW);
+    setLEDJaune2(HIGH);
+    tone(BUZZER,1500,500);
+    delay(500);
+    setLEDJaune2(LOW);
+    setLEDVerte3(HIGH);
+    tone(BUZZER,2000,500);
+    delay(500);
+    setLEDVerte3(LOW);
+    setLEDRouge4(HIGH);
+    tone(BUZZER,2500,500);
+    delay(1000);
+    setLEDRouge4(LOW);
+    noTone(BUZZER);
+    delay(500);
+    
+    setLEDBleue1(HIGH);
+    setLEDJaune2(HIGH);
+    setLEDVerte3(HIGH);
+    setLEDRouge4(HIGH);
+    tone(BUZZER,4000,500);
+    delay(1000);
+    noTone(BUZZER);
+    setLEDBleue1(LOW);
+    setLEDJaune2(LOW);
+    setLEDVerte3(LOW);
+    setLEDRouge4(LOW);
+    
+    delay(1000);
+    
+}
+
 
 // permet de lire l'état des boutons et de le stocker en variable globale 
 void litBoutons() {
@@ -124,6 +183,15 @@ void initBoard() {
   
   // Le rétro-éclairage du LCD
   setLcdLight(retroLcd);
+  
+  display.begin();
+  
+  // pour autoriser les accents
+  display.cp437(true);
+
+  display.setContrast(50);
+  display.clearDisplay();   // clears the screen and buffer
+  animDebut();
   
 }
 
