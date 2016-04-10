@@ -1,0 +1,128 @@
+#ifndef _SPRITES_H
+#define _SPRITES_H
+
+static const byte PROGMEM pacdroite[] =
+{ B00111100,
+  B01111110,
+  B11011100,
+  B11111000,
+  B11111000,
+  B11111100,
+  B01111110,
+  B00111100};
+
+static const byte PROGMEM pachaut[] =
+{ B00000000,
+  B01000010,
+  B11100111,
+  B11111111,
+  B11111111,
+  B11011111,
+  B01111110,
+  B00111100};
+
+static const byte PROGMEM pacgauche[] =
+{ B00111100,
+  B01111110,
+  B00111011,
+  B00011111,
+  B00011111,
+  B00111111,
+  B01111110,
+  B00111100};
+
+static const byte PROGMEM pacbas[] =
+{ B00111100,
+  B01111110,
+  B11011111,
+  B11111111,
+  B11111111,
+  B11100111,
+  B01000010,
+  B00000000};
+
+static const byte PROGMEM dead[] =
+{ B00000000,
+  B00111110,
+  B01111111,
+  B01001001,
+  B01111111,
+  B01111111,
+  B00111110,
+  B00101010};
+
+
+
+// Le bmp du coffre (but à atteindre)
+static const byte PROGMEM coffre[] =
+{ B00111100,
+  B11000011,
+  B10011001,
+  B10000001,
+  B11111111,
+  B10000001,
+  B11111111,
+  B00000000};
+
+static const byte PROGMEM haut[] =
+{ B00011000,
+  B00100100,
+  B01000010,
+  B10000001,
+  B11100111,
+  B00100100,
+  B00100100,
+  B00111100};
+
+static const byte PROGMEM bas[] =
+{ 
+  B00111100,
+  B00100100,
+  B00100100,
+  B11100111,
+  B10000001,
+  B01000010,
+  B00100100,
+  B00011000
+};
+
+
+static const byte PROGMEM droite[] =
+{ B00011000,
+  B00010100,
+  B11110010,
+  B10000001,
+  B10000001,
+  B11110010,
+  B00010100,
+  B00011000};
+static const byte PROGMEM gauche[] =
+{ B00011000,
+  B00101000,
+  B01001111,
+  B10000001,
+  B10000001,
+  B01001111,
+  B00101000,
+  B00011000};
+static const byte PROGMEM fantomeG[] =
+{ B00111100,
+  B01000010,
+  B10000001,
+  B10101001,
+  B10000001,
+  B10000001,
+  B11010101,
+  B10101011};
+static const byte PROGMEM fantomeD[] =
+{ B00111100,
+  B01000010,
+  B10000001,
+  B10010101,
+  B10000001,
+  B10000001,
+  B10101011,
+  B11010101};
+ 
+
+#endif
