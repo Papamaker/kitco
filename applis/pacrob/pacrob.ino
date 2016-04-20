@@ -15,10 +15,11 @@
 #define ETAT_AFFICHE_AIDE     4
 #define ETAT_GAGNE            5
 #define ETAT_PERDU            6
-
+#define ETAT_AIDE_IDE         7
+#define ETAT_AIDE_NIVEAU      8
 
 #define ETAT_TEST 99
-byte etat = ETAT_IDE;
+byte etat = ETAT_INTRO;
 
 #define PACDROITE 0
 #define PACHAUT   1
@@ -26,9 +27,14 @@ byte etat = ETAT_IDE;
 #define PACBAS    3
 #define PACDEAD   4
 byte pacEtat = PACDROITE;
+// position de pacrob
+byte posPac  = 0;
 
 // Le numéro du niveau en cours
 byte niveau = 0;
+
+// la ligne sélectionnée dans l'ide
+byte curseurIde = 0;
 
 //
 // Les instructions du programme
@@ -49,23 +55,15 @@ const byte* cmdes[]= {
   haut,
   bas,
   droite,
-  gauche,
-  pacdroite,
-  pachaut,
-  pacgauche,
-  pacbas
+  gauche
 };
 
 // les textes des commandes
-char* commandes[8] = {
+char* commandes[5] = {
   "haut",
   "bas",
   "droite",
-  "gauche",
-  "touche d",
-  "touche h",
-  "touche g",
-  "touche b" 
+  "gauche"
 };
 
 byte tailleProg = 0;
@@ -83,8 +81,9 @@ byte* niv;
 
 void setup() {
   Serial.println(freeRam());
-  initBoard(0); 
+  initBoard(1); 
   niv = lesNivs[niveau];
+  posPac = niv[2];
 }
 
 // va executer le programme prog
@@ -110,8 +109,13 @@ void lancer() {
       break;
     }
   }
-    setLEDBleue1(LOW);
-  Serial.println(freeRam());
+  setLEDBleue1(LOW);
+  // si on n'est pas arrivé à la fin: perdu
+  if (posPac!=niv[3]) {
+    delay(500);
+    crash();
+    check();
+  }
 }
 
 void crash() {
@@ -125,7 +129,7 @@ void check() {
   noTone(BUZZER); 
 
   // si le pac-rob est sur la case coffre: on a gagné!
-  if (niv[2] == niv[3]) {
+  if (posPac == niv[3]) {
    etat = ETAT_GAGNE;
   }
   
@@ -142,9 +146,9 @@ void check() {
 void instrHaut() {
   byte longueur = niv[0];
   byte hauteur  = niv[1];
-  byte xPac     = niv[2] % longueur;
-  byte yPac     = niv[2] / longueur;
-  byte indexPac = niv[2] + 4;
+  byte xPac     = posPac % longueur;
+  byte yPac     = posPac / longueur;
+  byte indexPac = posPac + 4;
 
   pacEtat = PACHAUT;
   if (!(niv[indexPac] & MH)) { // pas de mur: on peut avancer
@@ -152,7 +156,7 @@ void instrHaut() {
   } else {
     crash();
   }
-  niv[2] = yPac*longueur + xPac;
+  posPac = yPac*longueur + xPac;
   check();
   
 }
@@ -161,9 +165,9 @@ void instrHaut() {
 void instrBas() {
   byte longueur = niv[0];
   byte hauteur  = niv[1];
-  byte xPac     = niv[2] % longueur;
-  byte yPac     = niv[2] / longueur;
-  byte indexPac = niv[2] + 4;
+  byte xPac     = posPac % longueur;
+  byte yPac     = posPac / longueur;
+  byte indexPac = posPac + 4;
 
   pacEtat = PACBAS;
   if (!(niv[indexPac] & MB)) { // pas de mur: on peut avancer
@@ -171,7 +175,7 @@ void instrBas() {
   } else {
     crash();
   }
-  niv[2] = yPac*longueur + xPac;
+  posPac = yPac*longueur + xPac;
   check();
 }
 
@@ -179,9 +183,9 @@ void instrBas() {
 void instrGauche() {
   byte longueur = niv[0];
   byte hauteur  = niv[1];
-  byte xPac     = niv[2] % longueur;
-  byte yPac     = niv[2] / longueur;
-  byte indexPac = niv[2] + 4;
+  byte xPac     = posPac % longueur;
+  byte yPac     = posPac / longueur;
+  byte indexPac = posPac + 4;
 
   pacEtat = PACGAUCHE;
   if (!(niv[indexPac] & MG)) { // pas de mur: on peut avancer
@@ -189,7 +193,7 @@ void instrGauche() {
   } else {
     crash();
   }
-  niv[2] = yPac*longueur + xPac;
+  posPac = yPac*longueur + xPac;
   check();
 }
 
@@ -197,9 +201,9 @@ void instrGauche() {
 void instrDroite() {
   byte longueur = niv[0];
   byte hauteur  = niv[1];
-  byte xPac     = niv[2] % longueur;
-  byte yPac     = niv[2] / longueur;
-  byte indexPac = niv[2] + 4;
+  byte xPac     = posPac % longueur;
+  byte yPac     = posPac / longueur;
+  byte indexPac = posPac + 4;
 
   pacEtat = PACDROITE;
   if (!(niv[indexPac] & MD)) { // pas de mur: on peut avancer
@@ -207,7 +211,7 @@ void instrDroite() {
   } else {
     crash();
   }
-  niv[2] = yPac*longueur + xPac;
+  posPac = yPac*longueur + xPac;
   check();
 }
 
@@ -215,8 +219,8 @@ void instrDroite() {
 void dessineNiveau() {
   byte longueur = niv[0];
   byte hauteur  = niv[1];
-  byte xPac     = niv[2]%longueur;
-  byte yPac     = niv[2]/longueur; 
+  byte xPac     = posPac%longueur;
+  byte yPac     = posPac/longueur; 
   byte xFin     = niv[3]%longueur;
   byte yFin     = niv[3]/longueur;
 
@@ -291,7 +295,7 @@ void dessineNiveau() {
 }
 
 void initNiveau() {
-  niv[2]=14;
+  posPac=14;
   pacEtat = PACDROITE;
   progIndex = 0;
   dessineNiveau();
@@ -319,7 +323,7 @@ void etatIntro() {
   delay(2000);
   attendRelache();
   display.clearDisplay();
-  display.println("Pac-Rob est  un robot qui s'est perdu  dans un      labyrinthe...");
+  display.println("PAC-ROB est  un robot qui s'est perdu  dans un      labyrinthe...");
   display.display();
   attendTouche();
   attendRelache();
@@ -327,10 +331,11 @@ void etatIntro() {
   display.println(String("Envoie lui unprogramme    pour l'aider ")+AGRAVE+" s'"+EAIGU+"chapper ...");
   display.display();
   attendTouche();  
+  etat = ETAT_AFFICHE_NIVEAU;
 }
 
 void etatTest() {
-  niv[2]=14;
+  posPac=14;
   pacEtat = PACDROITE;
   
   display.clearDisplay();
@@ -349,8 +354,9 @@ void afficheIde() {
 
   // 1 - afficher le choix dans les commandes
   display.clearDisplay();
-  for (byte i = indexIde;i<min(indexIde+4,sizeof(cmdes)/sizeof(const byte*));i++) {
-    display.setCursor(0,8*(i-indexIde));
+  
+  for (byte i = indexIde-curseurIde;i<min(indexIde-curseurIde+4,sizeof(cmdes)/sizeof(const byte*));i++) {
+    display.setCursor(0,8*(i-indexIde+curseurIde));
     if (i == indexIde) {
       display.setTextColor(WHITE,BLACK);
     } else {
@@ -358,6 +364,7 @@ void afficheIde() {
     }
     display.print(commandes[i]);
   }
+      display.setTextColor(BLACK,WHITE);
 
   // 2 - afficher le code du programme
   for (int i=0;i<tailleProg;i++) {
@@ -375,19 +382,31 @@ void afficheIde() {
 // Gauche: effacer la dernière instruction
 // Droite: ???
 // A: ajouter l'instruction
-// B: ???
+// B: retirer la derniere instruction
 // select: Help
 void etatIde() {
   afficheIde(); 
   attendTouche();
   if (toucheBas() && (indexIde+1<sizeof(cmdes)/sizeof(const byte*))) {
+    if (curseurIde<3) {
+      curseurIde++;
+    }
     indexIde = indexIde + 1;    
   }
   if (toucheHaut() && (indexIde > 0)) {
+    if (curseurIde>0) {
+      curseurIde--;
+    }
     indexIde = indexIde - 1; 
   }
   if (toucheA()) {
     prog[tailleProg++] = indexIde;
+  }
+  if (toucheB() && (tailleProg>0)) {
+    tailleProg--;
+  }
+  if (toucheSelect()) {
+    etat = ETAT_AIDE_IDE;
   }
   if (toucheStart()) {
     etat = ETAT_AFFICHE_NIVEAU;
@@ -399,13 +418,16 @@ void etatAfficheNiv() {
   dessineNiveau();
   attendRelache();
   attendTouche();
-  if (!toucheSelect()) {
-      attendRelache();
-      etat = ETAT_IDE;
-  } else {
+  if (toucheA()) {
     attendRelache();    
     lancer();
+  } else if (toucheStart()||toucheB()) {
+    attendRelache();
+    etat = ETAT_IDE;
+  } else if (toucheSelect()) {
+    etat = ETAT_AIDE_NIVEAU;
   }
+  
 }
 
 void etatGagne() {
@@ -413,11 +435,58 @@ void etatGagne() {
       progIndex = 0;
       niveau++;
       niv = lesNivs[niveau];
+      posPac = niv[2];
       setLEDVerte3(HIGH);
-      delay(1000);
+      tone(BUZZER,1000,300); 
+      delay(300);
+      noTone(BUZZER); 
+      tone(BUZZER,3000,700); 
+      delay(700);
       setLEDVerte3(LOW);
       pacEtat = PACDROITE;
-      etat = ETAT_IDE;
+      etat = ETAT_AFFICHE_NIVEAU;
+}
+
+
+void etatPerdu() {
+      tailleProg = 0;
+      progIndex = 0;
+      setLEDRouge4(HIGH);
+      tone(BUZZER,500,300); 
+      delay(300);
+      noTone(BUZZER); 
+      tone(BUZZER,200,700); 
+      delay(700);
+      setLEDRouge4(LOW);
+      pacEtat = PACDROITE;
+      posPac = niv[2];
+      etat = ETAT_AFFICHE_NIVEAU;
+}
+
+void etatAideIde() {
+  attendRelache();
+  display.clearDisplay();
+  display.println("A:ajout cmde");
+  display.println("B:suppr. cmde");
+  display.println("C:voir niveau");
+  display.println("D:aide");
+  display.display();
+  attendTouche();
+  attendRelache();
+  etat = ETAT_IDE;
+}
+
+void etatAideNiveau() {
+  attendRelache();
+  display.clearDisplay();
+  display.println("A:lancer");
+  display.println("B:retour");
+  display.println("C:retour");
+  display.println("D:aide");
+  display.display();
+  attendTouche();
+  attendRelache();
+  etat = ETAT_AFFICHE_NIVEAU;
 }
 
 
@@ -437,6 +506,16 @@ void loop() {
       break;
     case ETAT_GAGNE:
       etatGagne();
+      break;
+    case ETAT_PERDU:
+      etatPerdu();
+      break;
+    case ETAT_AIDE_IDE:
+      etatAideIde();
+      break;
+    case ETAT_AIDE_NIVEAU:
+      etatAideNiveau();
+      break;
     default: 
       break;
   }
