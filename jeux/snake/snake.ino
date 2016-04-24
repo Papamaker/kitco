@@ -97,10 +97,8 @@ void afficheNiveau(int niveau=1){
 }
 
 void genereNourriture(){
-
-  randomSeed(analogRead(0));
-  int r = random(30);
-  if(nourriture.point.x == -1 && r == 5){
+    randomSeed(millis()%100);
+  if(nourriture.point.x == -1){
     nourriture.point.x = 2 + random(82);
     nourriture.point.y = 2 + random(46);
   }
@@ -166,12 +164,12 @@ void bougeSnake(Direction dir ){
     pt.x = tmp1-> point.x + vectx ;
     pt.y = tmp1-> point.y + vecty;
     
-    if(dir==BAS  && vectx != 0){
+    if(dir==HAUT  && vectx != 0){
       pt.x = tmp1-> point.x ;
       pt.y = tmp1-> point.y - 1;
     }
 
-    if(dir==HAUT  && vectx != 0){
+    if(dir==BAS  && vectx != 0){
       pt.x = tmp1-> point.x ;
       pt.y = tmp1-> point.y + 1;
     }
@@ -200,6 +198,8 @@ void bougeSnake(Direction dir ){
       elmt -> nxt = snake.corps;
       snake.corps = elmt;
 
+      tone(BUZZER,1000,50); 
+          
       snake.taille ++;
     }
 
@@ -228,12 +228,22 @@ void perdu(){
       display.setCursor(3,display.height()/2-7);
       display.println(" Perdu !");
       display.display();
+      setLEDRouge4(HIGH);
+      tone(BUZZER,500,300); 
+      delay(300);
+      noTone(BUZZER); 
+      tone(BUZZER,200,700); 
+      delay(700);
+
       delay(5000);
+      setLEDRouge4(LOW);
       setup();
 }
 
 
 Direction toucheDirection(){
+
+  litBoutons();
   if(toucheHaut()){
     return HAUT;
   }else if(toucheBas()){
@@ -249,15 +259,19 @@ Direction toucheDirection(){
 void setup()
 {
     Serial.begin(9600);
-    display.begin();
+  
+  
+    initBoard(1); 
+    
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(BLACK);
     display.setCursor(3,display.height()/2-7);
-    display.println(" Papamaker.fr");
+    display.println(" Snake ");
+    display.println(String("    by R")+EAIGU+"my ");
     display.display();
     
-    delay(1000);
+    delay(2000);
     display.clearDisplay();
     initSnake();
     afficheSnake();
@@ -269,7 +283,8 @@ void setup()
 /* Boucle */
 void loop()
 {
-    delay(500 - min(snake.taille,400));
+    // trop lent chez moi (8mhz vs 16Mhz peut-être...)
+    //delay(100 - min(snake.taille,50));
 
     bougeSnake(toucheDirection());
 
