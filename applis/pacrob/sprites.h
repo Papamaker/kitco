@@ -74,6 +74,17 @@ static const byte PROGMEM haut[] =
   B00100100,
   B00111100};
 
+static const byte PROGMEM haut2[] =
+{ B010,
+  B101,
+  B111,
+  B010,
+  B010,
+  B010,
+  B010,
+  B010
+};
+
 static const byte PROGMEM bas[] =
 { 
   B00111100,
@@ -86,6 +97,17 @@ static const byte PROGMEM bas[] =
   B00011000
 };
 
+static const byte PROGMEM bas2[] =
+{ B010,
+  B010,
+  B010,
+  B010,
+  B010,
+  B111,
+  B101,
+  B010
+};
+
 
 static const byte PROGMEM droite[] =
 { B00011000,
@@ -96,6 +118,19 @@ static const byte PROGMEM droite[] =
   B11110010,
   B00010100,
   B00011000};
+
+static const byte PROGMEM droite2[] =
+{ B000,
+  B000,
+  B100,
+  B110,
+  B111,
+  B110,
+  B100,
+  B000
+};
+
+
 static const byte PROGMEM gauche[] =
 { B00011000,
   B00101000,
@@ -105,6 +140,18 @@ static const byte PROGMEM gauche[] =
   B01001111,
   B00101000,
   B00011000};
+
+static const byte PROGMEM gauche2[] =
+{ B000,
+  B000,
+  B001,
+  B011,
+  B111,
+  B011,
+  B001,
+  B000
+};
+
 static const byte PROGMEM fantomeG[] =
 { B00111100,
   B01000010,
