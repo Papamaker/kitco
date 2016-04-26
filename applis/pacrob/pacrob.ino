@@ -55,7 +55,11 @@ const byte* cmdes[]= {
   haut,
   bas,
   droite,
-  gauche
+  gauche,
+  haut2,
+  bas2,
+  droite2,
+  gauche2
 };
 
 // les textes des commandes
@@ -286,9 +290,7 @@ void dessineNiveau() {
   }
 
   // 2 - afficher le code du programme
-  for (int i=progIndex;i<tailleProg;i++) {
-      display.drawBitmap(i*10,38,cmdes[prog[i]],8,8,1);
-  }
+    afficheCodeProg(progIndex);
   
 
   display.display();
@@ -299,6 +301,20 @@ void initNiveau() {
   pacEtat = PACDROITE;
   progIndex = 0;
   dessineNiveau();
+
+}
+
+// affiche le prog à partir de la ligne pointeurProg
+void afficheCodeProg(byte pointeurProg) {
+    byte decalCmdes = 0;
+  byte decal = 9;
+  if (tailleProg>9) {
+    decalCmdes = 4;  
+    decal = 4;
+  } 
+  for (int i=pointeurProg;i<tailleProg;i++) {
+      display.drawBitmap(i*decal,38,cmdes[prog[i]+decalCmdes],8,8,1);
+  }
 
 }
 
@@ -367,9 +383,7 @@ void afficheIde() {
       display.setTextColor(BLACK,WHITE);
 
   // 2 - afficher le code du programme
-  for (int i=0;i<tailleProg;i++) {
-      display.drawBitmap(i*10,38,cmdes[prog[i]],8,8,1);
-  }
+  afficheCodeProg(0);
   
   display.display();
 }
@@ -402,13 +416,13 @@ void etatIde() {
   if (toucheA()) {
     prog[tailleProg++] = indexIde;
   }
-  if (toucheB() && (tailleProg>0)) {
+  if (toucheStart() && (tailleProg>0)) {
     tailleProg--;
   }
   if (toucheSelect()) {
     etat = ETAT_AIDE_IDE;
   }
-  if (toucheStart()) {
+  if (toucheB()) {
     etat = ETAT_AFFICHE_NIVEAU;
   }
   attendRelache();
@@ -467,9 +481,9 @@ void etatAideIde() {
   attendRelache();
   display.clearDisplay();
   display.println("A:ajout cmde");
-  display.println("B:suppr. cmde");
-  display.println("C:voir niveau");
-  display.println("D:aide");
+  display.println("B:voir niveau");
+  display.println("start: suppr.");
+  display.println("select:aide");
   display.display();
   attendTouche();
   attendRelache();
@@ -481,8 +495,8 @@ void etatAideNiveau() {
   display.clearDisplay();
   display.println("A:lancer");
   display.println("B:retour");
-  display.println("C:retour");
-  display.println("D:aide");
+  display.println("start:retour");
+  display.println("select:aide");
   display.display();
   attendTouche();
   attendRelache();
