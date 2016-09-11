@@ -322,15 +322,17 @@ void etatIntro() {
   display.setTextSize(1);
   display.setTextColor(BLACK);
   display.setCursor(0,0);
-  for (char i=0;i<20;i++) { 
+  for (char i=0;i<10;i++) { 
     display.clearDisplay();
-    display.setCursor(3,i);
-    display.println("  !PAC-ROB!");
+    display.setCursor(1,i);
+    display.println("  PAC-ROB");
+    display.println(" dedicated by");
+    display.println("   !LDA-IT!");
     display.display();
     delay(50);
     
   }
-  for (char i=0;i<10;i++) {
+  for (char i=0;i<3;i++) {
     display.drawRect(0+i,0+i,display.width()-2*i,display.height()-2*i,BLACK);
     display.display();
     delay(50);
@@ -339,7 +341,7 @@ void etatIntro() {
   delay(2000);
   attendRelache();
   display.clearDisplay();
-  display.println("PAC-ROB est  un robot qui s'est perdu  dans un      labyrinthe...");
+  display.println("PAC-ROB est  un robot qui s'est perdu  chez LDA...");
   display.display();
   attendTouche();
   attendRelache();

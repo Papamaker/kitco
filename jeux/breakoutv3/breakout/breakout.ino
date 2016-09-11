@@ -5,22 +5,42 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
 
-// Gestion du I2C pour le MCP23017
-#include "Wire.h"
+// Les caractères accentués pour les chaines de caractère
+#define EAIGU  ((char)0x82)
+#define AGRAVE ((char)0x85)
+
 
 // Les branchements du microcontrolleur
 // Rétro-éclairage
-#define LCD_LIGHT 11
+#define LCD_LIGHT 5
+
+//NOKIA
+#define DCNOKIA 10
+#define CSNOKIA 9
 
 // Le buzzer
-#define BUZZER 2
+#define BUZZER A0
 
-// Les branchements sur le MCP23017
+//LEDs
+#define LED_VERTE A3
+#define LED_ROUGE A2
+
+
 // Les boutons
-#define BOUTONGAUCHE 2
-#define BOUTONDROITE 4
-#define BOUTONA      32
-#define BOUTONB      16
+#define TOUCHE_HAUT   4
+#define TOUCHE_BAS    7
+#define TOUCHE_GAUCHE  6
+#define TOUCHE_DROITE 8
+#define TOUCHE_A      2
+#define TOUCHE_B      3
+char toucheHaut()   { return (LOW == digitalRead(TOUCHE_HAUT)); }
+char toucheBas()    { return (LOW == digitalRead(TOUCHE_BAS)); }
+char toucheGauche() { return (LOW == digitalRead(TOUCHE_GAUCHE)); } 
+char toucheDroite() { return (LOW == digitalRead(TOUCHE_DROITE)); } 
+char toucheA()      { return (LOW == digitalRead(TOUCHE_A)); } 
+char toucheB()      { return (LOW == digitalRead(TOUCHE_B)); } 
+
+
 
 // Décalage des briques par rapport aux murs (en pixels)
 #define DECALX 10
@@ -49,6 +69,7 @@
 
 byte evenement;
 
+byte contrast = 60;
 
 // Le niveau en cours: 16 briques par lignes sur 10 lignes = 20 octets de données
 byte niv[10][2]={ { B11111111,B11111111},
@@ -218,39 +239,139 @@ byte yBalle;
 byte etatBalle;
 byte dirBalle;
 
-// initialisation matérielle de l'écran
-Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);
+// initialisation matérielle de l'écran (SPI MATERIEL)
+Adafruit_PCD8544 display = Adafruit_PCD8544(DCNOKIA, CSNOKIA, -1);
+
+// initialisation matérielle de l'écran (SPI LOGICIEL)
+//Adafruit_PCD8544 display = Adafruit_PCD8544(13,11,DCNOKIA, CSNOKIA, -1);
+
+void setLEDVerte(byte state) {
+  digitalWrite(LED_VERTE,state);
+}
+
+void setLEDRouge(byte state) {
+  digitalWrite(LED_ROUGE,state);
+}
+
+// séquence de démarrage pour tester LEDs et écran et buzzer
+void animDebut() {
+    
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(BLACK);
+    display.setCursor(3,display.height()/2-7);
+    display.println(" Papamaker.fr");
+    String test = String("   Pr")+EAIGU+"sente";
+    display.println(test);
+    display.display();
+    setLEDVerte(HIGH);
+    setLEDRouge(LOW);
+    tone(BUZZER,1000,500);
+    delay(500);
+    setLEDVerte(LOW);
+    setLEDRouge(HIGH);
+    tone(BUZZER,1500,500);
+    delay(500);
+    setLEDVerte(HIGH);
+    setLEDRouge(LOW);
+    tone(BUZZER,2000,500);
+    delay(500);
+    setLEDVerte(LOW);
+    setLEDRouge(LOW);
+    tone(BUZZER,2500,500);
+    delay(1000);
+    noTone(BUZZER);
+    delay(500);
+    
+    setLEDVerte(HIGH);
+    setLEDRouge(HIGH);
+    tone(BUZZER,4000,500);
+    delay(1000);
+    noTone(BUZZER);
+    setLEDVerte(LOW);
+    setLEDRouge(LOW);
+
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(BLACK);
+    display.setCursor(3,display.height()/2-7);
+    display.println("Casse-briques ");
+    display.display();
+    
+    delay(2000);
+}
 
 
 // L'initialisation du code
 void setup() {
 
+  // set as outputs
+  DDRB |= (1 << DDB7);
+
+  // reset LCD
+  PORTB &= ~(1 << PORTB7);
+  delay(500);
+  PORTB |= (1 << PORTB7);
+
+    pinMode(LED_VERTE,OUTPUT);
+
+    pinMode(LED_ROUGE,OUTPUT);
+
+
+  // Les boutons(pull-ups + input)
+  pinMode(TOUCHE_HAUT,INPUT);
+  digitalWrite(TOUCHE_HAUT,HIGH);
+  pinMode(TOUCHE_DROITE,INPUT);
+  digitalWrite(TOUCHE_DROITE,HIGH);
+  pinMode(TOUCHE_BAS,INPUT);
+  digitalWrite(TOUCHE_BAS,HIGH);
+  pinMode(TOUCHE_GAUCHE,INPUT);
+  digitalWrite(TOUCHE_GAUCHE,HIGH);
+  pinMode(TOUCHE_A,INPUT);
+  digitalWrite(TOUCHE_A,HIGH);
+  pinMode(TOUCHE_B,INPUT);
+  digitalWrite(TOUCHE_B,HIGH);
+
+
   // initialisation de l'écran
   display.begin();
+  display.setContrast(contrast);
 
   // activer le retro-éclairage
   analogWrite(LCD_LIGHT, 0);
 
-  // initialisation du MCP23017
-  Serial.begin(9600);
-  Wire.begin();                  // init bus I2C
-  Wire.beginTransmission(0x20);
-  Wire.write(0x00);              // registre IODIRA (pour nos LEDs)
-  Wire.write(0x00);              // configurées en sortie
-  Wire.endTransmission(); 
-  Wire.beginTransmission(0x20);
-  Wire.write(0x0D);              // registre GPPUB (les boutons)
-  Wire.write(0xFF);              // activer les pullups
-  Wire.endTransmission();
-
   // initialisation du buzzer
   pinMode(BUZZER,OUTPUT);
 
+
+  if (toucheA()) {
+    while (!toucheB()) {
+      digitalWrite(LED_VERTE,HIGH);
+      if (toucheHaut()) {
+         if (contrast <127) contrast++;
+      }
+
+      if (toucheBas()) {
+         if (contrast >0) contrast--;
+      }
+      display.setContrast(contrast);
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(BLACK);
+      display.setCursor(3,display.height()/2-7);
+      display.println("-Constraste-");
+      display.drawLine(0,30,contrast*display.width()/128,30,BLACK);
+      display.display();
+    }
+  }
+        digitalWrite(LED_VERTE,LOW);
+
+  animDebut();
+  
   // lancement du niveau 1
   niveau = 0;
   prochainNiveau();
 }
-
 
 // la gestion des graphismes
 void afficheEcran() {
@@ -277,7 +398,7 @@ void afficheEcran() {
   display.drawRect( xRaq,YRAQ,TAILLERAQ,EPAISSEURRAQ,BLACK);
 
   // on affiche la balle
-  display.drawRect(xBalle,yBalle,2,1,BLACK);
+  display.drawRect(xBalle,yBalle,2,2,BLACK);
     
   }
 
@@ -290,37 +411,40 @@ void afficheEcran() {
 void controles() {
 
   byte boutons=0;
-   
-  Wire.beginTransmission(0x20); // init I2C 
-  Wire.write(0x13);             // registre des états des GPIOB (boutons)
-  Wire.endTransmission();
-  Wire.requestFrom(0x20, 1);    // lire un octet
-  boutons = Wire.read();    // store the incoming byte into boutons 
-  boutons = (~boutons)&0xFF;
+
+  if (toucheHaut()) {
+    if (contrast <127) contrast++;
+      display.setContrast(contrast);
+  }
+
+  if (toucheBas()) {
+    if (contrast >0) contrast--;
+      display.setContrast(contrast);
+  }
  
   // si on appuie sur gauche et qu'on est pas au bord: se déplacer
-  if ( (boutons&BOUTONGAUCHE) && (xRaq>1)) {
+  if ( (toucheGauche()) && (xRaq>1)) {
     xRaq=xRaq-VITESSERAQ;
     if (etatBalle == COLLEE) {
       xBalle = xBalle - VITESSERAQ; 
     }
   }
 
-  if ( (boutons&BOUTONDROITE) && (xRaq<(83-TAILLERAQ)) ) {
+  if ( (toucheDroite()) && (xRaq<(83-TAILLERAQ)) ) {
     xRaq=xRaq+VITESSERAQ;
     if (etatBalle == COLLEE) {
       xBalle = xBalle + VITESSERAQ; 
     }
   }
 
-  if ( (boutons&BOUTONA) && (etatBalle == COLLEE)) {
+  if ( (toucheA()) && (etatBalle == COLLEE)) {
     etatBalle = LIBRE; 
     dirBalle = 1;
     evenement = DECOLLE;
   } 
 
   // cheat code 
-  if ( (boutons&BOUTONB) && (boutons&BOUTONA)) {
+  if ( (toucheB()) && (toucheA())) {
     evenement = GAGNER; 
   }
 }
@@ -503,6 +627,19 @@ void son() {
 
 // on remet le niveau à zéro
 void prochainNiveau() {
+
+    for (byte i =0; i<8;i++) {
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(BLACK);
+      display.setCursor(12-i,display.height()/2-7);
+      display.println(String("Niveau ")+(niveau+1));
+      display.display();
+      tone(BUZZER,500*i,150);
+      delay(150);
+    }
+    delay(2000);
+  
   niveau++;
   for (byte i=0;i<10;i++) {
     for (byte j=0;j<2;j++) {
@@ -534,7 +671,7 @@ void loop() {
 
   // gestion du graphisme
   afficheEcran();
-  
+  delay(30);
   // gestion du son
   son();
   

@@ -19,38 +19,37 @@
 // Les boutons
 #define BOUTONGAUCHE 2
 #define BOUTONDROITE 4
-#define BOUTONA      32
-#define BOUTONB      16
+#define BOUTONA 32
+#define BOUTONB 16
 
 // Décalage des briques par rapport aux murs (en pixels)
 #define DECALX 10
 #define DECALY 5
 
 // Eléments de la raquette (position verticale, taille, épaisseur et vitesse)
-#define YRAQ         44
-#define TAILLERAQ    8
+#define YRAQ 44
+#define TAILLERAQ 8
 #define EPAISSEURRAQ 2
-#define VITESSERAQ   2
+#define VITESSERAQ 2
 
-// Etats de la balle (collée ou non à la raquette)
+//Etats de la balle
 #define COLLEE 1
-#define LIBRE  0
+#define LIBRE 0
 
-// La vitesse de la balle
 #define VITESSEBALLE 1
 
-// Les évènements du jeu 
-#define DECOLLE       1
+// Evenements sonores
+#define DECOLLE 1
 #define EXPLOSEBRIQUE 2
-#define REBONDRAQ     3
-#define REBONDMUR     4
-#define PERDU         5
-#define GAGNER        6
+#define REBONDRAQ 3
+#define REBONDMUR 4
+#define PERDU 5
+#define GAGNER 6
 
-byte evenement;
+byte sonAJouer=0;
 
 
-// Le niveau en cours: 16 briques par lignes sur 10 lignes = 20 octets de données
+// 16 briques par lignes sur 10 lignes = 20 octets de données
 byte niv[10][2]={ { B11111111,B11111111},
     { B11111111,B11111111},
     { B11111111,B11111111},
@@ -62,7 +61,7 @@ byte niv[10][2]={ { B11111111,B11111111},
     { B11111111,B11111111},
     { B11111111,B11111111} };
 
-// les 14 niveaux
+// 14 niveaux
 byte lesNiveaux[14][10][2] = {
   { { B00000000,B00000000},
     { B00000000,B00000000},
@@ -207,16 +206,16 @@ byte lesNiveaux[14][10][2] = {
 };
 
 // numéro du niveau
-byte niveau;
+byte niveau = 0;
 
-// la position horizontale de la raquette
-byte xRaq;
+// la position de la raquette
+byte xRaq = 1;
 
 // la position de la balle
-byte xBalle;
-byte yBalle;
-byte etatBalle;
-byte dirBalle;
+byte xBalle = TAILLERAQ/2;
+byte yBalle = YRAQ-1;
+byte etatBalle = COLLEE;
+byte dirBalle = 1;
 
 // initialisation matérielle de l'écran
 Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);
@@ -244,11 +243,10 @@ void setup() {
   Wire.endTransmission();
 
   // initialisation du buzzer
-  pinMode(BUZZER,OUTPUT);
+    pinMode(BUZZER,OUTPUT);
 
-  // lancement du niveau 1
-  niveau = 0;
-  prochainNiveau();
+    restart();
+
 }
 
 
@@ -316,12 +314,12 @@ void controles() {
   if ( (boutons&BOUTONA) && (etatBalle == COLLEE)) {
     etatBalle = LIBRE; 
     dirBalle = 1;
-    evenement = DECOLLE;
+    sonAJouer = DECOLLE;
   } 
 
   // cheat code 
   if ( (boutons&BOUTONB) && (boutons&BOUTONA)) {
-    evenement = GAGNER; 
+    sonAJouer = GAGNER; 
   }
 }
 
@@ -358,7 +356,7 @@ void logiqueJeu() {
 
      // Est-ce qu'une brique est présente à cet endroit
      if (niv[yCase][groupe] & (B10000000>>col)) {
-       evenement = EXPLOSEBRIQUE;
+       sonAJouer = EXPLOSEBRIQUE;
        niv[yCase][groupe] = niv[yCase][groupe] & (~(B10000000>>col));
 
        // changement de direction
@@ -407,7 +405,7 @@ void logiqueJeu() {
          } else {
            dirBalle = 7;
          }
-         evenement = REBONDRAQ;
+         sonAJouer = REBONDRAQ;
        }
 
    // rebond sur les murs lattéraux
@@ -417,7 +415,7 @@ void logiqueJeu() {
     } else {
       dirBalle = 5;
     }
-    evenement = REBONDMUR;
+    sonAJouer = REBONDMUR;
    } else {
      if ( ((dirBalle == 5) || (dirBalle==7)) && (xBalle <= 0) ) {
        if (dirBalle == 5) {
@@ -425,7 +423,7 @@ void logiqueJeu() {
        } else {
          dirBalle = 1;
        }
-       evenement = REBONDMUR;
+       sonAJouer = REBONDMUR;
      }
    }
 
@@ -436,12 +434,12 @@ void logiqueJeu() {
      } else {
        dirBalle = 5;
      }
-     evenement = REBONDMUR;
+     sonAJouer = REBONDMUR;
    }
    
    // perdu!
    if (yBalle >=48) {
-     evenement = PERDU;
+     sonAJouer = PERDU;
    }
    
    // gagné!
@@ -454,7 +452,7 @@ void logiqueJeu() {
      }
    }
    if (gagne) {
-    evenement = GAGNER;
+    sonAJouer = GAGNER;
    }
    
   } 
@@ -463,7 +461,7 @@ void logiqueJeu() {
 
 
 void son() {
-  switch (evenement) {
+  switch (sonAJouer) {
     case DECOLLE:
       tone(BUZZER,2000,10);
     break;
@@ -479,7 +477,7 @@ void son() {
     case PERDU:
       tone(BUZZER, 200,1000);
       delay(990);
-      nouvelleVie();
+      restart();
     break;
     case GAGNER:
       tone(BUZZER, 500,200);
@@ -488,7 +486,8 @@ void son() {
       delay(100);
       tone(BUZZER, 1000,200);
       delay(500);
-      prochainNiveau();
+      niveau++;
+      restart();
       break;
       
     default:
@@ -497,34 +496,32 @@ void son() {
   delay(10);
   noTone(BUZZER);
 
-  evenement = 0;
+  sonAJouer = 0;
 
 }
 
-// on remet le niveau à zéro
-void prochainNiveau() {
-  niveau++;
-  for (byte i=0;i<10;i++) {
-    for (byte j=0;j<2;j++) {
-      niv[i][j] = lesNiveaux[niveau-1][i][j];
+
+// on reprend le niveau: réinitialiser tout sauf niv
+void restart() {
+  
+  if (sonAJouer != PERDU) {
+    for (byte i=0;i<10;i++) {
+      for (byte j=0;j<2;j++) {
+        niv[i][j] = lesNiveaux[niveau][i][j];
+      }
     }
   }
-  nouvelleVie();
-}
 
-// on initialise le niveau
-void nouvelleVie() {
-  
-  evenement = 0;
+  sonAJouer = 0;
   
   // la position de la raquette
   xRaq = 1;
 
   // la position de la balle
-  xBalle    = TAILLERAQ/2;
-  yBalle    = YRAQ-1;
+  xBalle = TAILLERAQ/2;
+  yBalle = YRAQ-1;
   etatBalle = COLLEE;
-  dirBalle  = 1;
+  dirBalle = 1;
   
 }
 
