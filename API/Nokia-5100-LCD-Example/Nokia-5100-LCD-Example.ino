@@ -78,13 +78,16 @@ static const char xkcdSandwich[504] PROGMEM = {
 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0xFF, 
 };
 
+
+
 void setup()
 {
-  Serial.begin(9600);
+
+Serial.begin(9600);
 
   lcdBegin(); // This will setup our pins, and initialize the LCD
   updateDisplay(); // with displayMap untouched, SFE logo
-  setContrast(40); // Good values range from 40-60
+  setContrast(60); // Good values range from 40-60
   delay(2000);
   
   lcdFunTime(); // Runs a 30-second demo of graphics functions
@@ -101,7 +104,7 @@ void setup()
 // what you type on the display. Type ~ to clear the display.
 void loop()
 {
-  static int cursorX = 0;
+ static int cursorX = 0;
   static int cursorY = 0;
   
   if (Serial.available())
@@ -210,7 +213,7 @@ void lcdFunTime()
       delay(20);
     }
   }
-  
+  setLight(255);
   /* setRect Example */
   clearDisplay(WHITE); // Start fresh
   

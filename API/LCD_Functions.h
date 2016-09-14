@@ -10,6 +10,13 @@ LED (backlight) pin should remain on a PWM-capable pin. */
 #define DCNOKIA 10
 #define CSNOKIA 9
 
+#define DEBUG
+
+void debug(const char *t) {
+#ifdef DEBUG
+    Serial.println(t);
+#endif
+}
 
 const int scePin = CSNOKIA;   // SCE - Chip select, pin 3 on LCD.
 //const int rstPin = 6;   // RST - Reset, pin 4 on LCD.
@@ -23,7 +30,7 @@ const int blPin = LCD_LIGHT;    // LED - Backlight LED, pin 8 on LCD.
 #define LCD_DATA     1
 
 /* 84x48 LCD Defines: */
-#define LCD_WIDTH   84 // Note: x-coordinates go wide
+#define LARGEUR_ECRAN   84 // Note: x-coordinates go wide
 #define LCD_HEIGHT  48 // Note: y-coordinates go high
 #define WHITE       0  // For drawing pixels. A 0 draws white.
 #define BLACK       1  // A 1 draws black.
@@ -148,7 +155,7 @@ to the PCD8544.
 
 Because the PCD8544 won't let us write individual pixels at a
 time, this is how we can make targeted changes to the display. */
-byte displayMap[LCD_WIDTH * LCD_HEIGHT / 8] = {
+byte displayMap[LARGEUR_ECRAN * LCD_HEIGHT / 8] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // (0,0)->(11,7) ~ These 12 bytes cover an 8x12 block in the left corner of the display
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // (12,0)->(23,7)
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, // (24,0)->(35,7)
@@ -193,6 +200,10 @@ byte displayMap[LCD_WIDTH * LCD_HEIGHT / 8] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // (72,40)->(83,47) !!! The bottom right pixel!
 };
 
+void setLight(byte c) {
+    analogWrite(blPin, 255-c);
+}
+
 // There are two memory banks in the LCD, data/RAM and commands.
 // This function sets the DC pin high or low depending, and then
 // sends the data byte
@@ -213,14 +224,14 @@ void LCDWrite(byte data_or_command, byte data)
 void setPixel(int x, int y, boolean bw)
 {
   // First, double check that the coordinate is in range.
-  if ((x >= 0) && (x < LCD_WIDTH) && (y >= 0) && (y < LCD_HEIGHT))
+  if ((x >= 0) && (x < LARGEUR_ECRAN) && (y >= 0) && (y < LCD_HEIGHT))
   {
     byte shift = y % 8;
 
     if (bw) // If black, set the bit.
-      displayMap[x + (y/8)*LCD_WIDTH] |= 1<<shift;
+      displayMap[x + (y/8)*LARGEUR_ECRAN] |= 1<<shift;
     else   // If white clear the bit.
-      displayMap[x + (y/8)*LCD_WIDTH] &= ~(1<<shift);
+      displayMap[x + (y/8)*LARGEUR_ECRAN] &= ~(1<<shift);
   }
 }
 
@@ -235,10 +246,10 @@ void clearPixel(int x, int y)
   setPixel(x, y, WHITE); // call setPixel with bw set to white
 }
 
-// setLine draws a line from x0,y0 to x1,y1 with the set color.
+// ligneEcran draws a line from x0,y0 to x1,y1 with the set color.
 // This function was grabbed from the SparkFun ColorLCDShield
 // library.
-void setLine(int x0, int y0, int x1, int y1, boolean bw)
+void ligneEcran(int x0, int y0, int x1, int y1, boolean bw)
 {
   int dy = y1 - y0; // Difference between y0 and y1
   int dx = x1 - x0; // Difference between x0 and x1
@@ -315,7 +326,7 @@ void setRect(int x0, int y0, int x1, int y1, boolean fill, boolean bw)
 
     while(xDiff > 0)
     {
-      setLine(x0, y0, x0, y1, bw);
+      ligneEcran(x0, y0, x0, y1, bw);
 
       if(x0 > x1)
         x0--;
@@ -328,10 +339,10 @@ void setRect(int x0, int y0, int x1, int y1, boolean fill, boolean bw)
   else
   {
     // best way to draw an unfilled rectangle is to draw four lines
-    setLine(x0, y0, x1, y0, bw);
-    setLine(x0, y1, x1, y1, bw);
-    setLine(x0, y0, x0, y1, bw);
-    setLine(x1, y0, x1, y1, bw);
+    ligneEcran(x0, y0, x1, y0, bw);
+    ligneEcran(x0, y1, x1, y1, bw);
+    ligneEcran(x0, y0, x0, y1, bw);
+    ligneEcran(x1, y0, x1, y1, bw);
   }
 }
 
@@ -403,7 +414,7 @@ void setChar(char character, int x, int y, boolean bw)
 // progressive coordinates until it's done.
 // This function was grabbed from the SparkFun ColorLCDShield
 // library.
-void setStr(char * dString, int x, int y, boolean bw)
+void setStr(const char * dString, int x, int y, boolean bw)
 {
   while (*dString != 0x00) // loop until null terminator
   {
@@ -414,7 +425,7 @@ void setStr(char * dString, int x, int y, boolean bw)
       setPixel(x, i, !bw);
     }
     x++;
-    if (x > (LCD_WIDTH - 5)) // Enables wrap around
+    if (x > (LARGEUR_ECRAN - 5)) // Enables wrap around
     {
       x = 0;
       y += 8;
@@ -428,7 +439,7 @@ void setStr(char * dString, int x, int y, boolean bw)
 // Also, the array must reside in FLASH and declared with PROGMEM.
 void setBitmap(const char * bitArray)
 {
-  for (int i=0; i<(LCD_WIDTH * LCD_HEIGHT / 8); i++)
+  for (int i=0; i<(LARGEUR_ECRAN * LCD_HEIGHT / 8); i++)
   {
     char c = pgm_read_byte(&bitArray[i]);
     displayMap[i] = c;
@@ -440,7 +451,7 @@ void setBitmap(const char * bitArray)
 // The screen won't actually clear until you call updateDisplay()!
 void clearDisplay(boolean bw)
 {
-  for (int i=0; i<(LCD_WIDTH * LCD_HEIGHT / 8); i++)
+  for (int i=0; i<(LARGEUR_ECRAN * LCD_HEIGHT / 8); i++)
   {
     if (bw)
       displayMap[i] = 0xFF;
@@ -462,7 +473,7 @@ void gotoXY(int x, int y)
 void updateDisplay()
 {
   gotoXY(0, 0);
-  for (int i=0; i < (LCD_WIDTH * LCD_HEIGHT / 8); i++)
+  for (int i=0; i < (LARGEUR_ECRAN * LCD_HEIGHT / 8); i++)
   {
     LCDWrite(LCD_DATA, displayMap[i]);
   }
@@ -489,7 +500,7 @@ void invertDisplay()
   LCDWrite(LCD_COMMAND, 0x20); //Set display mode  */
 
   /* Indirect, swap bits in displayMap option: */
-  for (int i=0; i < (LCD_WIDTH * LCD_HEIGHT / 8); i++)
+  for (int i=0; i < (LARGEUR_ECRAN * LCD_HEIGHT / 8); i++)
   {
     displayMap[i] = ~displayMap[i] & 0xFF;
   }
@@ -507,7 +518,7 @@ void lcdBegin(void)
   pinMode(sdinPin, OUTPUT);
   pinMode(sclkPin, OUTPUT);
   pinMode(blPin, OUTPUT);
-  analogWrite(blPin, 255);
+  analogWrite(blPin, 0);
 
   SPI.begin();
   SPI.setDataMode(SPI_MODE0);
