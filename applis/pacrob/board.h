@@ -1,1 +1,1 @@
-../../hardware/Proto0.2/board.h
+../../hardware/Kitco1.0/board.h

@@ -11,6 +11,16 @@
 #include <SPI.h>
 #include "LCD_Functions.h"
 
+
+#define DEBUGFJA
+
+#ifdef DEBUGFJA
+#define debug(A) Serial.println(A)
+#else
+#define debug(A) ;
+#endif
+
+
 // Le buzzer
 #define BUZZER A0
 
@@ -36,26 +46,46 @@ byte lumEcr = 0;
 
 
 // Les fonctions utilisateurs en français
-char toucheHaut()   { return (LOW == digitalRead(TOUCHE_HAUT)); }
-char toucheBas()    { return (LOW == digitalRead(TOUCHE_BAS)); }
-char toucheGauche() { return (LOW == digitalRead(TOUCHE_GAUCHE)); }
-char toucheDroite() { return (LOW == digitalRead(TOUCHE_DROITE)); }
-char toucheA()      { return (LOW == digitalRead(TOUCHE_A)); }
-char toucheB()      { return (LOW == digitalRead(TOUCHE_B)); }
+//char toucheHaut()   { return (LOW == digitalRead(TOUCHE_HAUT)); }
+//char toucheBas()    { return (LOW == digitalRead(TOUCHE_BAS)); }
+//char toucheGauche() { return (LOW == digitalRead(TOUCHE_GAUCHE)); }
+//char toucheDroite() { return (LOW == digitalRead(TOUCHE_DROITE)); }
+//char toucheA()      { return (LOW == digitalRead(TOUCHE_A)); }
+//char toucheB()      { return (LOW == digitalRead(TOUCHE_B)); }
 
-void LEDVerte(byte state) { digitalWrite(LED_VERTE,state);}
-void LEDRouge(byte state) { digitalWrite(LED_ROUGE,state);}
+#define toucheHaut() (LOW == digitalRead(TOUCHE_HAUT))
+#define toucheBas() (LOW == digitalRead(TOUCHE_BAS))
+#define toucheGauche() (LOW == digitalRead(TOUCHE_GAUCHE))
+#define toucheDroite() (LOW == digitalRead(TOUCHE_DROITE))
+#define toucheA() (LOW == digitalRead(TOUCHE_A))
+#define toucheB() (LOW == digitalRead(TOUCHE_B))
 
-void lumiereEcran(byte b) { setLight(b); }
-void contrasteEcran(byte b) { contraste = b; setContrast(b); }
+//void LEDVerte(byte state) { digitalWrite(LED_VERTE,state);}
+//void LEDRouge(byte state) { digitalWrite(LED_ROUGE,state);}
+#define LEDVerte(x) digitalWrite(LED_VERTE,x)
+#define LEDRouge(x) digitalWrite(LED_ROUGE,x)
+
+//void lumiereEcran(byte b) { setLight(b); }
+//void contrasteEcran(byte b) { contraste = b; setContrast(b); }
+
+#define lumiereEcran(b) setLight(b)
+#define contrasteEcran(b) contraste = b; setContrast(b)
+
 #define NOIR 1
 #define BLANC 0
-void effacerEcran(byte b) { clearDisplay(b);}
-void ecrirEcran(const char * dString, int x, int y, boolean bw) {setStr(dString, x, y, bw);}
-void rafraichirEcran() {updateDisplay();}
+//void effacerEcran(byte b) { clearDisplay(b);}
+//void ecrirEcran(const char * dString, int x, int y, boolean bw) {setStr(dString, x, y, bw);}
+//void rafraichirEcran() {updateDisplay();}
 
-void frequenceBuzzer(int freq,int duree) {tone(BUZZER,freq,duree);delay(duree);}
-void delai(int d) { delay(d);}
+#define effacerEcran(b) clearDisplay(b)
+#define ecrirEcran(s,x,y,b) setStr(s,x,y,b)
+#define rafraichirEcran() updateDisplay()
+
+//void frequenceBuzzer(int freq,int duree) {tone(BUZZER,freq,duree);delay(duree);}
+//void delai(int d) { delay(d);}
+
+#define frequenceBuzzer(f,d) tone(BUZZER,f,d);delay(d)
+#define delai(d) delay(d)
 
 // l'animation de début
 // séquence de démarrage pour tester LEDs et écran et buzzer
@@ -101,6 +131,8 @@ void initialiserKitco(byte anim=true) {
 
     pinMode(LED_VERTE,OUTPUT);
     pinMode(LED_ROUGE,OUTPUT);
+    
+    pinMode(A1,OUTPUT);
     
     // Les boutons(pull-ups + input)
     pinMode(TOUCHE_HAUT,INPUT);

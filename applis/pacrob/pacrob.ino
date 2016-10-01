@@ -3,6 +3,8 @@
 // jeu éducatif d'apprentissage de la programmation sur la console a 5 euros
 
 #include "board.h"
+//#include "/Users/francoisjacob/Dropbox/maker/github/macbookpro/consolea5euros/API/kitco.h"
+//#include "C:\Users\jacobf\Documents\personnel\Dropbox\maker\github\macbookpro\consolea5euros\API\kitco.h"
 #include "sprites.h"
 #include "niveaux.h"
 //
@@ -326,8 +328,8 @@ void etatIntro() {
     display.clearDisplay();
     display.setCursor(1,i);
     display.println("  PAC-ROB");
-    display.println(" dedicated by");
-    display.println("   !LDA-IT!");
+    display.println(" by");
+    display.println("  Papamaker");
     display.display();
     delay(50);
     
@@ -341,7 +343,7 @@ void etatIntro() {
   delay(2000);
   attendRelache();
   display.clearDisplay();
-  display.println("PAC-ROB est  un robot qui s'est perdu  chez LDA...");
+  display.println("PAC-ROB est  un robot qui s'est perdu ...");
   display.display();
   attendTouche();
   attendRelache();

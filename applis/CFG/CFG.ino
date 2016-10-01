@@ -5,32 +5,135 @@
 // - réglage rétro-éclairage
 // - choix du programme à téléchager : et flash de celui-ci
 
-// pour l'API kitco
-#include "/Users/francoisjacob/Dropbox/maker/github/macbookpro/consolea5euros/API/kitco.h"
-//#include "C:\Users\jacobf\Documents\personnel\Dropbox\maker\github\macbookpro\consolea5euros\API\kitco.h"
-#include <SD.h>
+// ajouter LED allumée quand lecture SD 
+// stocker valeurs contraste + LED en EEPROM
+// gérer l'appel multiple à printDirectory et menu chargement
 
-//#define load_game (*((void(*)(char*))0x7ffc))
+
+
+// pour l'API kitco
+#include "kitco.h"
+
+#include <SPI.h>
+#include <SD.h>
+//#include "SdFat.h"
+//SdFat SD;
+
+
+File root;
+char fichiers[6][8]; // liste static des 100 max fichiers .HEX sur la carte
+byte nbFichiers = 0;
+byte page = 0; // page pour l'affichage des fichiers
+
 #define load_game (*((void(*)(const char* filename))(0x7ffc/2)))
 
 #define MENU_PRINCIPAL 0
 #define MENU_CONTRASTE 1
-#define MENU_LUMIERE 2
-#define MENU_APPLIS 3
-#define MENU_INFOS 3
+#define MENU_LUMIERE   2
+#define MENU_APPLIS    3
+#define MENU_INFOS     3
 
-byte etat = MENU_PRINCIPAL;
-int index = 0;
+byte etat  = MENU_PRINCIPAL;
+byte index = 0;
+
+
+void printDirectory() {
+
+  LEDVerte(ALLUME);
+
+  // pour etre bien au début même pour les appels suivants
+  nbFichiers = 0;
+  
+  // Allumer la LED verte pour montrer que l'on lit les données
+  byte ind=0;
+  while (true) {
+
+    File entry =  root.openNextFile();
+
+    if (! entry) {
+      // no more files
+      root.rewindDirectory();
+      debug("No more files");
+      break;
+    }
+
+    debug("checking File:");
+    debug(entry.name());
+      
+    if (entry.isDirectory()) {
+    } else {
+      byte longueur=0;
+      //char * strFichier = entry.name();
+      while (entry.name()[longueur]!=0){
+        longueur++; // calcul de la longueur du fichier
+      }
+      
+      if (longueur>=5) { // Assez pour avoir une extension
+        if ((entry.name()[longueur-4] == '.') &&
+            (entry.name()[longueur-3] == 'H') &&
+            (entry.name()[longueur-2] == 'E') &&
+            (entry.name()[longueur-1] == 'X')) {
+          if ( (nbFichiers >= page*6 && 
+            nbFichiers < (page+1)*6) ) {
+              for (byte k = 0;k < longueur - 4;k++) {
+                fichiers[nbFichiers][k] = entry.name()[k];    
+              }
+            }
+            fichiers[nbFichiers][longueur-4] = 0;
+            nbFichiers++;
+        }
+      }
+    }
+    entry.close();
+  }
+
+  //éteindre la LED verte
+
+  LEDVerte(ETEINTE);
+}
+
+
+
 
 void setup() {
 
+  // Open serial communications and wait for port to open:
   Serial.begin(9600);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+
+  debug("Initializing SD card...");
+  
+  if (!SD.begin(A1)) {
+    effacerEcran(BLANC);
+    ecrirEcran("Erreur SD",3,20,BLANC);
+    rafraichirEcran();  
+    delay(3000);
+    index = 0;
+    etat = MENU_PRINCIPAL;  
+    return;
+  }
+  
+  debug("initialization done.");
+  root = SD.open("/");
+
+  //printDirectory();
+  //delay(5000);
+  //page=1;
+  // root = SD.open("/");
+
+  //printDirectory();
+  
+  //delay(5000);
+  //page=1;
+  //printDirectory();
+  
   initialiserKitco(0);
   effacerEcran(BLANC);
   ecrirEcran("Configuration",3,20,NOIR);
   rafraichirEcran();
   delay(1000);
-
 
 }
 
@@ -38,9 +141,9 @@ void menuPrincipal() {
   effacerEcran(BLANC);
   byte cligno = (millis()/500)%2?BLANC:NOIR;
   ecrirEcran("Constraste",3,0,index==0?cligno:NOIR);
-  ecrirEcran("LED Ecran",3,8,index==1?cligno:NOIR);
-  ecrirEcran("Chargement",3,16,index==2?cligno:NOIR);
-  ecrirEcran("Info",3,24,index==3?cligno:NOIR);
+  ecrirEcran("Eclairage",3,8,index==1?cligno:NOIR);
+  ecrirEcran("Changer prog.",3,16,index==2?cligno:NOIR);
+  ecrirEcran("A propos",3,24,index==3?cligno:NOIR);
   rafraichirEcran();
 
   if (toucheHaut()) {
@@ -111,7 +214,7 @@ byte menu(char choix[][8],byte nbChoix) {
     byte premier = 0;
     
     // afficher les choix
-    if (!(index == 0 || index == 1 )) {
+    if (!(index == 0 || index == 1 || index == 2)) {
       premier = index - 3;
     }
 
@@ -131,13 +234,21 @@ byte menu(char choix[][8],byte nbChoix) {
 
     // si touche Bas
     if (toucheBas() && index<(nbChoix-1)) {
-      index = index +1;
+      if ((index % 6) == 5) {
+        page ++ ;
+        printDirectory();
+      }
+      index = index + 1;
       frequenceBuzzer(2500,100);
     }
 
     //si touche Haut
     if (toucheHaut() && index > 0) {
-      index = index +1;
+      if ((index % 6) == 0) {
+        page -- ;
+        printDirectory();
+      }
+      index = index - 1;
       frequenceBuzzer(2500,100);      
     }
     
@@ -149,117 +260,21 @@ byte menu(char choix[][8],byte nbChoix) {
 
     // si touche B
     if (toucheB()) {
-      return -1;
+      return 0xFF;
     }
   }
     
 }
 
 void menuApplis() {
-Sd2Card card;
-SdVolume volume;
-//SdFile root;
 
-  debug("Initialisation carte SD...");
-  // Lire la carte mémoire
-  if (!card.init(SPI_HALF_SPEED, CS_SD)) {
-      LEDRouge(ALLUME);
-      effacerEcran(BLANC);
-      ecrirEcran("Erreur SD",3,20,BLANC);
-      rafraichirEcran();  
-      delay(3000);
-      index = 0;
-      etat = MENU_PRINCIPAL;  
-      return;
-    }
 
-    debug("Trouver le type de carte...");
+  printDirectory();
 
-    // print the type of card
-    effacerEcran(BLANC);
-    ecrirEcran("Type SD:",3,0,NOIR);
-
-    switch (card.type()) {
-    case SD_CARD_TYPE_SD1:
-      ecrirEcran("SD1",50,0,NOIR);
-      break;
-    case SD_CARD_TYPE_SD2:
-      ecrirEcran("SD2",50,0,NOIR);
-      break;
-    case SD_CARD_TYPE_SDHC:
-      ecrirEcran("SDHC",50,0,NOIR);
-      break;
-    default:
-      ecrirEcran("??",50,0,NOIR);
-      break;
-  }
-      rafraichirEcran();  
-    
-    debug("Volume.init...");
-  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
-#if 1
-if (!volume.init(card)) {
-      LEDRouge(ALLUME);
-      effacerEcran(BLANC);
-      ecrirEcran("Erreur FAT",3,20,BLANC);
-      rafraichirEcran();  
-      delay(3000);
-      index = 0;
-      etat = MENU_PRINCIPAL;  
-      return;
-  }
-#endif
-
-    debug("SD begin");
-    delay(2000);
-
-  // afficher la liste des progs
-  if (!SD.begin(A1)) {
-      LEDRouge(ALLUME);
-      effacerEcran(BLANC);
-      ecrirEcran("Erreur SDBegin",3,20,BLANC);
-      rafraichirEcran();  
-      delay(3000);
-      index = 0;
-      etat = MENU_PRINCIPAL;  
-      return;
-  }
-    debug("SD open");
-    delay(2000);
-
-  File root = SD.open("/");
-
-    debug("opennextfile");
-    delay(2000);
-  // skipper les fichiers déjà lus
-     // load_game("CFG");
-
-  char fichiers[100][8]; // liste static des 100 max fichiers .HEX sur la carte
-  int nbFichiers = 0;
-    
-  File entry = root.openNextFile();
-  byte index=0;
-  while (entry) { // Parcourir les fichiers à la racine
-    byte longueur=0;
-    char * strFichier = entry.name();
-    while (strFichier[longueur]!=0) longueur++; // calcul de la longueur du fichier
-      if (longueur>=5) { // Assez pour avoir une extension
-        if ((strFichier[longueur-4] == '.') &&
-            (strFichier[longueur-3] == 'H') &&
-            (strFichier[longueur-2] == 'E') &&
-            (strFichier[longueur-1] == 'X')) {
-          for (byte k = 0;k < longueur - 4;k++) {
-            fichiers[index][k] = strFichier[k];    
-          }
-            fichiers[index][longueur-4] = 0;
-            nbFichiers++;
-        }
-      }
-    }
+  debug("done!");
 
   byte choix=menu(fichiers,nbFichiers);
-  if ( choix == -1 ) {
-      delay(3000);
+  if ( choix == 0xFF ) {
       index = 0;
       etat = MENU_PRINCIPAL;  
   } else {
@@ -268,11 +283,9 @@ if (!volume.init(card)) {
       ecrirEcran(fichiers[choix],3,8,NOIR);
       ecrirEcran("Patientez...",3,16,NOIR);
       rafraichirEcran();
-      // TODO FJA ajouter load_game(choix[i]);
-      delay(3000);
-  }
-  
-
+      load_game(fichiers[choix]);
+      //delay(3000);
+  }  
 }
 
 void loop() {

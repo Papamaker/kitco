@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:../../../../../Desktop/list files.c">
+   </FileRef>
+   <FileRef
+      location = "group:../../../../../Desktop/list files.h">
+   </FileRef>
+   <FileRef
       location = "container:../../../arduino/2boots/src/gamebuino_boot.c">
    </FileRef>
    <FileRef

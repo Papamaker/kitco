@@ -260,7 +260,7 @@ void animDebut() {
     display.setTextSize(1);
     display.setTextColor(BLACK);
     display.setCursor(3,display.height()/2-7);
-    display.println(" Papamaker.fr");
+    display.println(" Kitco.fr");
     String test = String("   Pr")+EAIGU+"sente";
     display.println(test);
     display.display();

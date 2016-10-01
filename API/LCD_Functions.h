@@ -10,14 +10,6 @@ LED (backlight) pin should remain on a PWM-capable pin. */
 #define DCNOKIA 10
 #define CSNOKIA 9
 
-#define DEBUG
-
-void debug(const char *t) {
-#ifdef DEBUG
-    Serial.println(t);
-#endif
-}
-
 const int scePin = CSNOKIA;   // SCE - Chip select, pin 3 on LCD.
 //const int rstPin = 6;   // RST - Reset, pin 4 on LCD.
 const int dcPin = DCNOKIA;    // DC - Data/Command, pin 5 on LCD.
