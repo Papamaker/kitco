@@ -1,1 +1,0 @@
-../../hardware/Kitco1.0/board.h
