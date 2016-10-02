@@ -3,7 +3,7 @@ ARDUINO_DIR = C:/arduino-1.0.5
 ARDUINO_DIR = /Users/francoisjacob/Dropbox/maker/arduino/2boots/Arduino.app/Contents/Resources/Java/
 
 # name of this project (used for the output files)
-TARGET = gamebuino_boot
+TARGET = bootloader
 
 # target folder location
 OUTPUT_DIR = obj
