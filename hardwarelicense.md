@@ -1,0 +1,1 @@
+All of the original design files (Eagle CAD) for the Kitco hardware is released here on this Git hub repository. These files are licensed under a Creative Commons Attribution Share-Alike license, which allows for both personal and commercial derivative works, as long as they credit Kitco and release their designs under the same license.
