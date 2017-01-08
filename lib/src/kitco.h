@@ -46,13 +46,6 @@ byte lumEcr = 0;
 
 
 // Les fonctions utilisateurs en français
-//char toucheHaut()   { return (LOW == digitalRead(TOUCHE_HAUT)); }
-//char toucheBas()    { return (LOW == digitalRead(TOUCHE_BAS)); }
-//char toucheGauche() { return (LOW == digitalRead(TOUCHE_GAUCHE)); }
-//char toucheDroite() { return (LOW == digitalRead(TOUCHE_DROITE)); }
-//char toucheA()      { return (LOW == digitalRead(TOUCHE_A)); }
-//char toucheB()      { return (LOW == digitalRead(TOUCHE_B)); }
-
 #define toucheHaut() (LOW == digitalRead(TOUCHE_HAUT))
 #define toucheBas() (LOW == digitalRead(TOUCHE_BAS))
 #define toucheGauche() (LOW == digitalRead(TOUCHE_GAUCHE))
@@ -60,29 +53,30 @@ byte lumEcr = 0;
 #define toucheA() (LOW == digitalRead(TOUCHE_A))
 #define toucheB() (LOW == digitalRead(TOUCHE_B))
 
-//void LEDVerte(byte state) { digitalWrite(LED_VERTE,state);}
-//void LEDRouge(byte state) { digitalWrite(LED_ROUGE,state);}
+#define touche() (toucheHaut() || toucheBas() || toucheDroite() || toucheGauche() || toucheA() || toucheB()) 
+
+
 #define LEDVerte(x) digitalWrite(LED_VERTE,x)
 #define LEDRouge(x) digitalWrite(LED_ROUGE,x)
 
-//void lumiereEcran(byte b) { setLight(b); }
-//void contrasteEcran(byte b) { contraste = b; setContrast(b); }
 
-#define lumiereEcran(b) setLight(b)
+void lumiereEcran(byte c) {
+    analogWrite(blPin, 255-c);
+}
+
 #define contrasteEcran(b) contraste = b; setContrast(b)
 
-#define NOIR 1
-#define BLANC 0
-//void effacerEcran(byte b) { clearDisplay(b);}
-//void ecrirEcran(const char * dString, int x, int y, boolean bw) {setStr(dString, x, y, bw);}
-//void rafraichirEcran() {updateDisplay();}
+
+#define LARGEUR_ECRAN LCD_WIDTH
+#define HAUTEUR_ECRAN LCD_HEIGHT 
+
+#define NOIR BLACK
+#define BLANC WHITE
 
 #define effacerEcran(b) clearDisplay(b)
-#define ecrirEcran(s,x,y,b) setStr(s,x,y,b)
+#define ecrireEcran(s,x,y,b) setStr(s,x,y,b)
+#define ecrireLettre(c,x,y,b) setChar(c,x,y,b)
 #define rafraichirEcran() updateDisplay()
-
-//void frequenceBuzzer(int freq,int duree) {tone(BUZZER,freq,duree);delay(duree);}
-//void delai(int d) { delay(d);}
 
 #define frequenceBuzzer(f,d) tone(BUZZER,f,d);delay(d)
 #define delai(d) delay(d)
@@ -92,7 +86,7 @@ byte lumEcr = 0;
 void animDebut() {
 
     effacerEcran(BLANC);
-    ecrirEcran("Kitco",28,20,NOIR);
+    ecrireEcran("Kitco",28,20,NOIR);
     rafraichirEcran();
     
     LEDVerte(HIGH);
