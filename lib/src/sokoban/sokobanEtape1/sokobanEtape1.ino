@@ -1,5 +1,4 @@
-// Tutoriel pour le jeu Sokoban - Etape 1 : gestion des graphismes 
-
+// Template de base pour tout programme Kitco:
 // Nécessaire pour l'environnement Kitco
 #include "kitco.h"
 
@@ -15,20 +14,6 @@ char niveau[NB_LIGNES_NIVEAUX][NB_COLONNES_NIVEAUX] =
   {'M','.',' ','M'},
   {'M',' ',' ','M'},
   {'M','M','M','M'}};
-
-// La partie Setup concerne ce qui va être exécuté au démarrage de Kitco
-void setup() {
-
-  // Cette commande est nécessaire pour intialiser Kitco à son démarrage
-  initialiserKitco(0);
-
-  lcdBegin();  
-}
-
-
-//
-// LES GRAPHISMES
-//
 
 void dessineMur(int ligne, int colonne) {
   creerRectangle(colonne*4,ligne*4,colonne*4+4,ligne*4+3,1,NOIR);
@@ -51,51 +36,60 @@ void dessineCaisseDestination(int ligne, int colonne) {
   setPixel(colonne*4+1,ligne*4+2,NOIR);
 }
 void dessineDestination(int ligne, int colonne) {
-  creerRectangle(colonne*4+1,ligne*4+1,colonne*4+2,ligne*4+2,0,NOIR);
+  creerRectangle(colonne*4+1,ligne*4+1,colonne*4+3,ligne*4+2,1,NOIR);
 }
 
 void afficheGraphismes() {
 
-  // on efface l'écran
-  effacerEcran(BLANC);
+   // on efface l'écran
+   effacerEcran(BLANC);
 
-  // On affiche chacune des cases du niveau
-  for (int ligne=0;ligne<NB_LIGNES_NIVEAUX;ligne++) {
-    for (int colonne=0;colonne<NB_COLONNES_NIVEAUX;colonne++) {
+   // On affiche chacune des cases du niveau
+   for (int ligne=0;ligne<NB_LIGNES_NIVEAUX;ligne++) {
+     for (int colonne=0;colonne<NB_COLONNES_NIVEAUX;colonne++) {
        switch (niveau[ligne][colonne]) {
          case 'M': 
-            dessineMur(ligne,colonne);
-            break;
+           dessineMur(ligne,colonne);
+           break;
          case '@':
-            dessineJoueur(ligne,colonne);
-            break;
+           dessineJoueur(ligne,colonne);
+           break;
          case '+':
-            dessineJoueurDestination(ligne,colonne);
-            break;
+           dessineJoueurDestination(ligne,colonne);
+           break;
          case '$':
-            dessineCaisse(ligne,colonne);
-            break;
+           dessineCaisse(ligne,colonne);
+           break;
          case '*':
-            dessineCaisseDestination(ligne,colonne);
-            break;
+           dessineCaisseDestination(ligne,colonne);
+           break;
          case '.':
-            dessineDestination(ligne,colonne);
-            break;
+           dessineDestination(ligne,colonne);
+           break;
          case ' ':
-            // pour une case vide, on ne dessine rien
-            break;
+           // pour une case vide, on ne dessine rien
+           break;
          default:
-            break; 
-       }
-    }
-  }
-    // on affiche le resultat de nos commandes
-    rafraichirEcran();
+           break; 
+         }
+      }
+   }
+   
+   // on affiche le résultat
+   rafraichirEcran();
 }
 
-// Loop est la boucle principale, va se lancer en boucle après Setup
-void loop() {
+// La partie Setup concerne ce qui va être exécuté au démarrage de Kitco
+void setup() {
 
+  // Cette commande est nécessaire pour intialiser Kitco à son démarrage
+  initialiserKitco(1);
+  lcdBegin();
+  
+}
+
+// loop est la boucle principale: va se lancer en boucle après Setup
+void loop() {
   afficheGraphismes();
   // joueBruitages();
   // surveilleTouches();
